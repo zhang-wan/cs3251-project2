@@ -29,16 +29,16 @@ def main():
     while True:
         list = ["transform", "disconnect"]
         temp = raw_input("Command: ")
-        command = temp.split(" ")
-        if command[0] not in list:
+        inputs = temp.split(" ")
+        if inputs[0] not in list:
             print("Command not recognized!")
             temp = raw_input("Command: ")
-            command = temp.split(" ")
-        if command[0] == "disconnect":
+            inputs = temp.split(" ")
+        if inputs[0] == "disconnect":
             print("Disconnecting from reldat-server...")
             sys.exit()
 
-        F = command[1]
+        F = inputs[1]
         #read downloaded file
         dlFile = readFile(F)
 
