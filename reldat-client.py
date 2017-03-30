@@ -4,7 +4,7 @@ import sys
 import time
 import hashlib
 import os
-s = None
+sock = None
 address = None
 MAX_PAYLOAD = 1000
 
