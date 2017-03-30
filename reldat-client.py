@@ -10,8 +10,8 @@ MAX_PAYLOAD = 1000
 
 def main():
     global sock, address
-    if len(sys.argv) > 3 or len(sys.argv) != 3:
-        print("Incorrect arguments. Please enter IP:port and window size!")
+    if len(sys.argv) != 3:
+        print("Incorrect number of arguments. Please enter IP:port and window size!")
         sys.exit()
     arg_split = sys.argv[1].split(':')
     host = arg_split[0]
