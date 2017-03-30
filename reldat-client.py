@@ -63,11 +63,11 @@ def readFile(fileName):
 
 
 def checkSumSend(msg):
-    global s, address
+    global sock, address
     message = hashlib.md5()
     message.update(msg)
     checkSumData = message.hexdigest()
-    s.sendto(checkSumData, address)
+    sock.sendto(checkSumData, address)
 
 
     '''while True:
