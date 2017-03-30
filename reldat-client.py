@@ -27,9 +27,10 @@ def main():
         sys.exit()
 
     while True:
+        list = ["transform", "disconnect"]
         temp = raw_input("Command: ")
         command = temp.split(" ")
-        while command[0] != "transform" and command[0] != "disconnect":
+        if command[0] not in list:
             print("Command not recognized!")
             temp = raw_input("Command: ")
             command = temp.split(" ")
@@ -52,6 +53,47 @@ def readFile(fileName):
             return text
         except UnicodeDecodeError:
             print ("File should contain ascii characters")
-            return -1
     else:
         print("File does not exist in directory!")
+
+
+
+#def connect(host, addr):
+    #connection = False
+
+
+def checkSumSend(msg):
+    global s, address
+    message = hashlib.md5()
+    message.update(msg)
+    checkSumData = message.hexdigest()
+    s.sendto(checkSumData, address)
+
+
+    '''while True:
+        #using time library to set timeout function
+        start = time.time()
+        msg = "hi there"
+
+        try:
+            s.sendto(msg, address)
+            receive = s.recvfrom(1024)
+            receivedData = receive[0]
+            addr = receive[1]
+            print("Response from server: " + receivedData)
+
+
+    #if no response from server after 2s
+        except socket.timeout:
+            ping = ping + 1
+            if ping == 3:
+                break
+            print("The server has not answered in the last two seconds. retrying...")
+
+    print("Timeout after 3 attempts...")
+    s.close'''
+
+if __name__ == "__main__":
+    main()
+
+
