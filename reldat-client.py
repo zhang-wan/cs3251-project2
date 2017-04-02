@@ -4,12 +4,16 @@ import sys
 import time
 import hashlib
 import os
-sock = None
+import math
+
+#Constant Variables
+s = None
 address = None
-MAX_PAYLOAD = 1000
+PACKET_SIZE = 1000
+WINDOW_SIZE = 1
 
 def main():
-    global sock, address
+    global s, address
     if len(sys.argv) != 3:
         print("Incorrect number of arguments. Please enter IP:port and window size!")
         sys.exit()
@@ -18,15 +22,19 @@ def main():
     if '.' in host:
         host = socket.gethostbyname(host)
     port = int(arg_split[1])
-    window_size = int(sys.argv[2])
+    size = int(sys.argv[2])
+
     try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        print("Successful connection with reldat-server!")
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     except socket.error:
-        print ("Failed to connect with reldat-server!")
-        sys.exit()
+        print ("Failed to create socket")
+
+    address = (host,port)
+
 
     while True:
+        connect(address)
+
         list = ["transform", "disconnect"]
         temp = raw_input("Command: ")
         inputs = temp.split(" ")
@@ -39,61 +47,69 @@ def main():
             sys.exit()
 
         F = inputs[1]
+        data = None
         #read downloaded file
-        dlFile = readFile(F)
+        if checkFile(F) != -1:
+            data = makePackets(F)
 
-    sock.close()
+        #still fixing this part, need to include sequence numbers
+        s.sendto(data, address)
+        s.recvfrom(data,address)
+        print(data)
 
-def readFile(fileName):
+    s.close
+
+#make packets for sending
+def makePackets(fileName):
+    packets = []
+    with open(fileName, 'rb') as f:
+        fileSize = os.path.getsize(fileName)
+        numOfPackets = (fileSize/PACKET_SIZE) + 1
+        packetData = f.read(PACKET_SIZE)
+        packets.append(packetData)
+        print(packets)
+    return packets
+
+#check if file contains ascii characters only and is in the right directory
+def checkFile(fileName):
     if os.path.isfile(fileName):
-        with open(fileName, 'r') as f:
+        with open(fileName, 'rb') as f:
             text = f.read().replace('\n', '')
         try:
             text.encode('ascii')
-            return text
         except UnicodeDecodeError:
             print ("File should contain ascii characters")
+            return -1
+        f.close()
     else:
         print("File does not exist in directory!")
+        return -1
 
-
-
-#def connect(host, addr):
-    #connection = False
-
-
-def checkSumSend(msg):
+def checkSum(msg, checkMsg):
     global sock, address
     message = hashlib.md5()
-    message.update(msg)
+    message.update(checkMsg)
     checkSumData = message.hexdigest()
-    sock.sendto(checkSumData, address)
+    if checkSumData == msg:
+        return True
+    else:
+        return False
 
-
-    '''while True:
-        #using time library to set timeout function
-        start = time.time()
-        msg = "hi there"
-
-        try:
-            s.sendto(msg, address)
-            receive = s.recvfrom(1024)
-            receivedData = receive[0]
-            addr = receive[1]
-            print("Response from server: " + receivedData)
-
-
-    #if no response from server after 2s
-        except socket.timeout:
-            ping = ping + 1
-            if ping == 3:
-                break
-            print("The server has not answered in the last two seconds. retrying...")
-
-    print("Timeout after 3 attempts...")
-    s.close'''
+def connect(address):
+    try:
+        # handshake between client and server
+        s.sendto("SYN", address)
+        data, addr = s.recvfrom(PACKET_SIZE)
+        if data == "SYNACK":
+            print("Client received SYNACK from server")
+            s.sendto("ACK", address)
+        print("Successful connection with reldat-server!")
+    except socket.error:
+        print ("Failed to connect with reldat-server!")
+        sys.exit()
 
 if __name__ == "__main__":
     main()
+
 
 
