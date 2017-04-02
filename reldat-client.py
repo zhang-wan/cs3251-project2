@@ -6,7 +6,7 @@ import hashlib
 import os
 import math
 
-#Constant Variables
+#constant Variables
 s = None
 address = None
 PACKET_SIZE = 1000
@@ -101,7 +101,7 @@ def connect(address):
         s.sendto("SYN", address)
         data, addr = s.recvfrom(PACKET_SIZE)
         if data == "SYNACK":
-            print("Client received SYNACK from server")
+            print("Client received " + data + ", sending ACK")
             s.sendto("ACK", address)
         print("Successful connection with reldat-server!")
     except socket.error:
@@ -110,6 +110,7 @@ def connect(address):
 
 if __name__ == "__main__":
     main()
+
 
 
 
