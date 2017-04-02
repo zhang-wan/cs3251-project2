@@ -45,11 +45,11 @@ def connect():
             data, addr = s.recvfrom(PACKET_SIZE)
             s.settimeout(None)
             if data == "SYN":
-                print("Server received " + data + " from client")
+                print("Server received " + data + ", sending SYNACK")
                 s.sendto("SYNACK", addr)
                 s.settimeout(None)
             if data == "ACK":
-                print("Server is connected to client: " + str(addr))
+                print(data +" received, " + "Server is connected to client: " + str(addr))
                 s.settimeout(None)
         except socket.error:
             print ("Failed to connect with reldat-client")
