@@ -1,37 +1,61 @@
 import socket
 import sys
 import time
-
+PACKET_SIZE = 1000
 
 def main():
-    global sock, address
-    if len(sys.argv) != 2:
+    global s, address
+    if len(sys.argv) != 3:
         print("Incorrect number of arguments. Please enter <port number> <max window size>")
         sys.exit()
-    port = sys.argv[0]
-    size = sys.argv[1]
+    port = int(sys.argv[1])
+    size = int(sys.argv[2])
+    host = "127.0.0.1"
 
-#Create a socket
+    # Create a socket
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         print("Socket created")
     except socket.error:
         print("Failed to create socket")
         sys.exit()
-#Bind socket to host and port
+
+    # Bind socket to host and port
     try:
-        s.bind("", port)
-    except:
+        s.bind((host, port))
+    except socket.error:
         print("Bind failed")
         sys.exit()
-    s.listen()
-    while 1:
-        d = s.recvfrom(size)
-        data = d[0]
-        addr = d[1]
 
-        if not data:
-            break
-        s.close()
-     
+    print("Server listening...")
+
+    while 1:
+        connect()
+
+        #still fixing
+        data, addr = s.recvfrom(PACKET_SIZE)
+        s.sendto(data,addr)
+
+    s.close()
+
+def connect():
+    # implementing handshake between client and server
+    while 1:
+        try:
+            data, addr = s.recvfrom(PACKET_SIZE)
+            s.settimeout(None)
+            if data == "SYN":
+                print("Server received " + data + " from client")
+                s.sendto("SYNACK", addr)
+                s.settimeout(None)
+            if data == "ACK":
+                print("Server is connected to client: " + str(addr))
+                s.settimeout(None)
+        except socket.error:
+            print ("Failed to connect with reldat-client")
+            sys.exit()
+
+
+if __name__ == "__main__":
+    main()
     
