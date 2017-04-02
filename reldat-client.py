@@ -85,24 +85,34 @@ def checkFile(fileName):
         print("File does not exist in directory!")
         return -1
 
-def checkSum(msg, checkMsg):
-    global sock, address
+def checkSumCheck(checksum, data_to_check):
     message = hashlib.md5()
-    message.update(checkMsg)
+    message.update(data_to_check)
     checkSumData = message.hexdigest()
-    if checkSumData == msg:
+    if checkSumData == checksum:
         return True
     else:
         return False
 
+def checkSum(data):
+    message = hashlib.md5()
+    message.update(data)
+    checkSumData = message.hexdigest()
+    data = checkSumData.strip() + "," + data
+    return data
+
+
 def connect(address):
     try:
         # handshake between client and server
-        s.sendto("SYN", address)
+        checkSYN = checkSum("SYN")
+        s.sendto(checkSYN, address)
         data, addr = s.recvfrom(PACKET_SIZE)
-        if data == "SYNACK":
+        checksum, data = data.split(',', 1)
+        if checkSumCheck(checksum, data) and data[-6:] == "SYNACK":
             print("Client received " + data + ", sending ACK")
-            s.sendto("ACK", address)
+            sendACK = checkSum("ACK")
+            s.sendto(sendACK, address)
         print("Successful connection with reldat-server!")
     except socket.error:
         print ("Failed to connect with reldat-server!")
@@ -110,6 +120,8 @@ def connect(address):
 
 if __name__ == "__main__":
     main()
+
+
 
 
 
