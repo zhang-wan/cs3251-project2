@@ -1,5 +1,6 @@
 import socket
 import sys
+import hashlib
 import time
 PACKET_SIZE = 1000
 
@@ -43,18 +44,35 @@ def connect():
     while 1:
         try:
             data, addr = s.recvfrom(PACKET_SIZE)
+            checksum, data = data.split(',',1)
             s.settimeout(None)
-            if data == "SYN":
+            if checkSumCheck(checksum, data) and data[-3:] == "SYN":
                 print("Server received " + data + ", sending SYNACK")
-                s.sendto("SYNACK", addr)
-                s.settimeout(None)
-            if data == "ACK":
+                checkSYNACK = checkSum("SYNACK")
+                s.sendto(checkSYNACK, addr)
+
+            if checkSumCheck(checksum, data) and data[-3:] == "ACK":
                 print(data +" received, " + "Server is connected to client: " + str(addr))
-                s.settimeout(None)
+
         except socket.error:
             print ("Failed to connect with reldat-client")
             sys.exit()
 
+def checkSumCheck(checksum, data_to_check):
+    message = hashlib.md5()
+    message.update(data_to_check)
+    checkSumData = message.hexdigest()
+    if checkSumData == checksum:
+        return True
+    else:
+        return False
+
+def checkSum(data):
+    message = hashlib.md5()
+    message.update(data)
+    checkSumData = message.hexdigest()
+    data = checkSumData.strip() + "," + data
+    return data
 
 if __name__ == "__main__":
     main()
