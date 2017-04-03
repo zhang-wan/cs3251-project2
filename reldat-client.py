@@ -31,9 +31,8 @@ def main():
 
     address = (host,port)
 
-
+    connect(address)
     while True:
-        connect(address)
 
         list = ["transform", "disconnect"]
         temp = raw_input("Command: ")
@@ -48,13 +47,31 @@ def main():
 
         F = inputs[1]
         data = None
+
+        num_of_ack = 0
+        next_packet_num = 0
+
         #read downloaded file
         if checkFile(F) != -1:
             data = makePackets(F)
+            numOfPackets = len(data)
+            packet = packetHeader(data)
 
-        #still fixing this part, need to include sequence numbers
-        s.sendto(data, address)
-        s.recvfrom(data,address)
+            # still figuring out
+            try:
+                s.settimeout(2)
+                # ensure that all packets are send to server
+                while num_of_ack < numOfPackets:
+                    if next_packet_num < size:
+                        s.sendto(packet[next_packet_num], address)
+                        next_packet_num += 1
+                        if next_packet_num == numOfPackets:
+                            print("Successfully sent all packets!")
+                        num_of_ack += 1
+            except socket.timeout:
+                print("Server has not responded in the last 2 seconds. Retrying...")
+
+        data, addr = s.recvfrom(PACKET_SIZE)
         print(data)
 
     s.close
@@ -118,10 +135,32 @@ def connect(address):
         print ("Failed to connect with reldat-server!")
         sys.exit()
 
+#packet header to store information
+def packetHeader(packets):
+    seqNum = 0
+    ackNum = 0
+    windowSize = 0
+    payload = 0
+    packetHeader = ""
+
+    for i in packets:
+        packetHeader += str(seqNum) + '|'
+        packetHeader += str(ackNum) + '|'
+        packetHeader += str(windowSize) + '|'
+        message = hashlib.md5()
+        message.update(i)
+        checkSum = message.hexdigest()
+        #print(checkSum)
+        packetHeader += str(checkSum) + '|'
+        packetHeader += str(payload)
+        #packet
+        seqNum += 1
+        ackNum += 1
+    return packetHeader
+
+
 if __name__ == "__main__":
     main()
-
-
 
 
 
