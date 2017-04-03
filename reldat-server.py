@@ -2,8 +2,10 @@ import socket
 import sys
 import hashlib
 import time
+
 address = None
 PACKET_SIZE = 1000
+recv_unack = []
 
 def main():
     global s, address
@@ -32,8 +34,9 @@ def main():
     print("Server listening...")
 
     connect()
+    
     #still figuring out
-    while 1:
+    while True:
         expected_seq_num = 0
         ackNum = 0
         data, addr = s.recvfrom(PACKET_SIZE)
