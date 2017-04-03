@@ -36,6 +36,7 @@ def main():
     
     lastACK = time.time() # set time for for the last ACK
     num_of_ack = 0
+    global next_packet_num
     next_packet_num = 0
     
     while True:
@@ -63,7 +64,9 @@ def main():
         if(next_packet_num < WINDOW_SIZE):
             try:
                 # Start handshake
+                print(packet)
                 connect(address, packet[next_packet_num])
+                next_packet_num = next_packet_num + 1
                 
             except socket.timeout:
                 print("Server has not responded in the last 2 seconds. Resending...")
@@ -137,7 +140,7 @@ def connect(address, curr_packet):
         #checkData = checkSum(curr_packet)
         s.sendto(curr_packet, address)
         # increment sequence number
-        next_packet_num += 1
+        #next_packet_num = next_packet_num + 1
 
         # Add packet to window
         window.append(curr_packet)
@@ -171,8 +174,8 @@ def connect(address, curr_packet):
 def packetHeader(packets):
     seqNum = 0
     ackNum = 0
-    windowSize = 0
-    payload = 0
+    windowSize = WINDOW_SIZE
+    payload = packets
     packetHeader = ""
 
     for i in packets:
