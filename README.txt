@@ -3,6 +3,18 @@ Name:
 Zhang Wan
 Jarred Aultman
 
+TO COMPILE AND RUN:
+
+In two separate terminals, type these into command line:
+
+1) python reldat-client.py
+
+Client takes in <IP Address>:<port number> <max window> as arguments
+
+2) python reldat-server.py
+
+Server takes in <port number> <max window> as arguments
+
 Files:
 -reldat-client.py
 The client side of the GBN RELDAT project.

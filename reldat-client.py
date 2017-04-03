@@ -17,7 +17,7 @@ count = 1
 def main():
     global s, address
     if len(sys.argv) != 3:
-        print("Incorrect number of arguments. Please enter IP:port and window size!")
+        print("Incorrect number of arguments. Please enter <IP address>:<port number> <max window>")
         sys.exit()
     arg_split = sys.argv[1].split(':')
     host = arg_split[0]

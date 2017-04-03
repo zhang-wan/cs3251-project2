@@ -66,10 +66,9 @@ def connect():
                 if header[0] == expected_seq_num:
                     print("Server received " + data + ", sending ACK")
                     ## Need to change ACK value in header ##
-                    ackPacket = packetACKHeader(
                         
                     s.sendto(checkData, addr)
-                    expected_seq_num += 1
+                    expected_seq_num = expected_seq_num +1
 
             else:
                 # discard packet and resend ACK
