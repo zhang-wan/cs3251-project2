@@ -33,40 +33,47 @@ def main():
 
     print("Server listening...")
 
-    connect()
     
-    #still figuring out
     while True:
-        expected_seq_num = 0
+        expected_seq_num = 1
         ackNum = 0
-        data, addr = s.recvfrom(PACKET_SIZE)
-        print(data)
-        header = decodeHeader(data)
-        if expected_seq_num > header[0]:
-            print("Packet is out of order")
-        else:
-            data.isUpper()
-            print(data)
+
+        # Establish connection via receiving of packet and sending of ACK
+        connect()
+        
 
     s.close()
 
 def connect():
     # implementing handshake between client and server
-    while 1:
+    while True:
         try:
             data, addr = s.recvfrom(PACKET_SIZE)
             checksum, data = data.split(',',1)
-            s.settimeout(None)
-            if checkSumCheck(checksum, data) and data[-3:] == "SYN":
-                print("Server received " + data + ", sending SYNACK")
-                checkSYNACK = checkSum("SYNACK")
-                s.sendto(checkSYNACK, addr)
+            #s.settimeout(None)
+        
+            header = decodeHeader(data)
+            if expected_seq_num > header[0]:
+                print("Packet is out of order")
+            else:
+                # transform data
+                data.isUpper()
+                print(data)
+            checkData = checkSum(data)
+            
+            if checkSumCheck(checksum, checkData):
+                if header[0] == expected_seq_num:
+                    print("Server received " + data + ", sending ACK")
+                    expected_seq_num += 1
+                    
+                    s.sendto(checkData, addr)
 
-            if checkSumCheck(checksum, data) and data[-3:] == "ACK":
-                print(data +" received, " + "Server is connected to client: " + str(addr))
-                break
+            else:
+                # discard packet and resend ACK
+                print("Packet was discarded do to error")
+                
         except socket.error:
-            print ("Failed to connect with reldat-client")
+            print("Failed to connect with reldat-client")
             sys.exit()
 
 def checkSumCheck(checksum, data_to_check):
@@ -119,7 +126,7 @@ def packetHeader(packets):
         packetHeader += str(checkSum) + '|'
         packetHeader += str(payload)
         seqNum += 1
-        ackNum += 1
+        #ackNum += 1
     return packetHeader
 
 if __name__ == "__main__":

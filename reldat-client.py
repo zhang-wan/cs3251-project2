@@ -60,7 +60,6 @@ def main():
             numOfPackets = len(data)
             packet = packetHeader(data)
 
-        # still figuring out
         if(next_packet_num < WINDOW_SIZE):
             try:
                 # Start handshake
@@ -132,16 +131,16 @@ def checkSum(data):
     return data
 
 # handshake between client and server
-def connect(address, packet_data):
+def connect(address, curr_packet):
     # SEND DATA TO SERVER
     try:
-        checkData = checkSum(packet_data)
+        checkData = checkSum(curr_packet)
         s.sendto(checkData, address)
         # increment sequence number
         next_packet_num += 1
 
-        # Add packet to window for Go
-        window.append(packet[next_packet_num])
+        # Add packet to window
+        window.append(curr_packet)
     except socket.timeout:
         print ("Timeout: Server did not respond. Retrying....")
         
@@ -151,10 +150,13 @@ def connect(address, packet_data):
         checksum, data = data.split(',', 1)
         
         # Check for any errors in packet via checksum
-        if checkSumCheck(checksum, data):
-            header = decodeHeader(data)
+        header = decodeHeader(data)
+        if checkSumCheck(checksum, checkData) and header[1]==0:
+            
             while header[0] > count:
+                # reset timer
                 lastACK = time.time()
+                # slide window
                 del window[0]
                 count += 1
         else:
@@ -162,7 +164,7 @@ def connect(address, packet_data):
             
         print("Successful connection with reldat-server!")
     except:
-        print ("Failed to connect with reldat-server!")
+        print("Failed to connect with reldat-server!")
         sys.exit()
 
 #packet header to store information
@@ -185,7 +187,7 @@ def packetHeader(packets):
         packetHeader += str(payload)
         #packet
         seqNum += 1
-        ackNum += 1
+        #ackNum += 1
     return packetHeader
 
 def decodeHeader(packet):
