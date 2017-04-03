@@ -65,9 +65,9 @@ def makePackets(fileName):
     with open(fileName, 'rb') as f:
         fileSize = os.path.getsize(fileName)
         numOfPackets = (fileSize/PACKET_SIZE) + 1
-        packetData = f.read(PACKET_SIZE)
-        packets.append(packetData)
-        print(packets)
+        for i in range(numOfPackets):
+            packetData = f.read(PACKET_SIZE)
+            packets.append(packetData)
     return packets
 
 #check if file contains ascii characters only and is in the right directory
