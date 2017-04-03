@@ -134,8 +134,8 @@ def checkSum(data):
 def connect(address, curr_packet):
     # SEND DATA TO SERVER
     try:
-        checkData = checkSum(curr_packet)
-        s.sendto(checkData, address)
+        #checkData = checkSum(curr_packet)
+        s.sendto(curr_packet, address)
         # increment sequence number
         next_packet_num += 1
 

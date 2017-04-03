@@ -48,25 +48,28 @@ def connect():
     # implementing handshake between client and server
     while True:
         try:
-            data, addr = s.recvfrom(PACKET_SIZE)
-            checksum, data = data.split(',',1)
+            packet, addr = s.recvfrom(PACKET_SIZE)
+            #checksum, data = data.split(',',1)
             #s.settimeout(None)
         
-            header = decodeHeader(data)
+            header = decodeHeader(packet)
             if expected_seq_num > header[0]:
                 print("Packet is out of order")
             else:
                 # transform data
-                data.isUpper()
-                print(data)
+                header.isUpper()
+                print(packet)
+
             checkData = checkSum(data)
             
-            if checkSumCheck(checksum, checkData):
+            if checkSumCheck(header[4], checkData):
                 if header[0] == expected_seq_num:
                     print("Server received " + data + ", sending ACK")
-                    expected_seq_num += 1
-                    
+                    ## Need to change ACK value in header ##
+                    ackPacket = packetACKHeader(
+                        
                     s.sendto(checkData, addr)
+                    expected_seq_num += 1
 
             else:
                 # discard packet and resend ACK
@@ -108,9 +111,9 @@ def decodeHeader(packet):
     result.append(payload)
     return result
 
-def packetHeader(packets):
+def packetACKHeader(packets):
     seqNum = 0
-    ackNum = 0
+    ackNum = 1
     windowSize = 0
     payload = 0
     packetHeader = ""
