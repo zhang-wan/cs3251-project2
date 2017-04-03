@@ -104,6 +104,17 @@ def checkFile(fileName):
         print("File does not exist in directory!")
         return -1
 
+#write back to the file being transformed and renames it
+def dlFile(fileName, data):
+    with open(fileName, 'wb') as f:
+        f.write(str(data))
+    f.close
+    for filename in os.listdir("."):
+        if filename.startswith(fileName):
+            temp = fileName.split(".")
+            temp2 = temp[0]
+            os.rename(fileName, temp2 +"-received"+".txt") 
+    
 def checkSumCheck(checksum, data_to_check):
     message = hashlib.md5()
     message.update(data_to_check)
