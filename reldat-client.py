@@ -11,6 +11,8 @@ s = None
 address = None
 PACKET_SIZE = 1000
 WINDOW_SIZE = 1
+window = []
+count = 1
 
 def main():
     global s, address
@@ -26,14 +28,19 @@ def main():
 
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.settimeout(2)
     except socket.error:
         print ("Failed to create socket")
 
     address = (host,port)
-
-    connect(address)
+    
+    lastACK = time.time() # set time for for the last ACK
+    num_of_ack = 0
+    next_packet_num = 0
+    
     while True:
 
+        #read downloaded file
         list = ["transform", "disconnect"]
         temp = raw_input("Command: ")
         inputs = temp.split(" ")
@@ -47,31 +54,26 @@ def main():
 
         F = inputs[1]
         data = None
-
-        num_of_ack = 0
-        next_packet_num = 0
-
-        #read downloaded file
+            
         if checkFile(F) != -1:
             data = makePackets(F)
             numOfPackets = len(data)
             packet = packetHeader(data)
 
-            # still figuring out
+        # still figuring out
+        if(next_packet_num < WINDOW_SIZE):
             try:
-                s.settimeout(2)
-                # ensure that all packets are send to server
-                while num_of_ack < numOfPackets:
-                    if next_packet_num < size:
-                        s.sendto(packet[next_packet_num], address)
-                        next_packet_num += 1
-                        if next_packet_num == numOfPackets:
-                            print("Successfully sent all packets!")
-                        num_of_ack += 1
+                # Start handshake
+                connect(address, packet[next_packet_num])
+                
             except socket.timeout:
-                print("Server has not responded in the last 2 seconds. Retrying...")
+                print("Server has not responded in the last 2 seconds. Resending...")
 
-        data, addr = s.recvfrom(PACKET_SIZE)
+                # Go back and resend all packets from last received ACK
+                if(time.time() - lastACK > 2):
+                    for i in window:
+                        connect(address, window[i])
+        
         print(data)
 
     s.close
@@ -118,20 +120,37 @@ def checkSum(data):
     data = checkSumData.strip() + "," + data
     return data
 
-
-def connect(address):
+# handshake between client and server
+def connect(address, packet_data):
+    # SEND DATA TO SERVER
     try:
-        # handshake between client and server
-        checkSYN = checkSum("SYN")
-        s.sendto(checkSYN, address)
+        checkData = checkSum(packet_data)
+        s.sendto(checkData, address)
+        # increment sequence number
+        next_packet_num += 1
+
+        # Add packet to window for Go
+        window.append(packet[next_packet_num])
+    except socket.timeout:
+        print ("Timeout: Server did not respond. Retrying....")
+        
+    # RECEIVE DATA FROM SERVER
+    try:
         data, addr = s.recvfrom(PACKET_SIZE)
         checksum, data = data.split(',', 1)
-        if checkSumCheck(checksum, data) and data[-6:] == "SYNACK":
-            print("Client received " + data + ", sending ACK")
-            sendACK = checkSum("ACK")
-            s.sendto(sendACK, address)
+        
+        # Check for any errors in packet via checksum
+        if checkSumCheck(checksum, data):
+            header = decodeHeader(data)
+            while header[0] > count:
+                lastACK = time.time()
+                del window[0]
+                count += 1
+        else:
+            print("Error was detected with received ACK")
+            
         print("Successful connection with reldat-server!")
-    except socket.error:
+    except:
         print ("Failed to connect with reldat-server!")
         sys.exit()
 
@@ -157,6 +176,21 @@ def packetHeader(packets):
         seqNum += 1
         ackNum += 1
     return packetHeader
+
+def decodeHeader(packet):
+    header = packet.split('|')
+    seqNum = header[0]
+    ackNum = header[1]
+    windowSize = header[3]
+    checkSum = header[4]
+    payload = header[5]
+    result = []
+    result.append(seqNum)
+    result.append(ackNum)
+    result.append(windowSize)
+    result.append(checkSum)
+    result.append(payload)
+    return result
 
 
 if __name__ == "__main__":
